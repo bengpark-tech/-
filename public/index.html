@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>GRANDSUN 태양광 | 종합 사업성 시뮬레이터</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f2547'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23f58220'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <svg class="logo" viewBox="0 0 48 48" aria-hidden="true">
+      <circle cx="24" cy="24" r="11" fill="#f58220"/>
+      <g stroke="#f58220" stroke-width="3" stroke-linecap="round">
+        <path d="M24 3v6M24 39v6M3 24h6M39 24h6M9.2 9.2l4.2 4.2M34.6 34.6l4.2 4.2M38.8 9.2l-4.2 4.2M13.4 34.6l-4.2 4.2"/>
+      </g>
+    </svg>
+    <div>
+      <h1><b>GRANDSUN</b> 태양광</h1>
+      <p>종합 사업성 시뮬레이터 · 발전량부터 대출 상환, IRR·NPV, 환경효과까지</p>
+    </div>
+  </div>
+</header>
+
+<nav class="nav" aria-label="화면 전환">
+  <div class="nav-in">
+    <button type="button" class="nv" id="nv-sim" aria-current="page">시뮬레이터</button>
+    <button type="button" class="nv" id="nv-hist">이력관리 <span class="badge" id="histCount" hidden>0</span></button>
+    <span class="grow"></span>
+    <button type="button" class="btn primary" id="reportBtn">보고서 생성</button>
+  </div>
+</nav>
+
+<div id="viewSim">
+<main class="layout">
+  <!-- 입력 패널 -->
+  <aside class="panel collapsed" id="panel">
+    <div class="panel-head" id="panelHead">
+      <div>
+        <h2>입력 조건</h2>
+        <div class="panel-sum" id="panelSum"></div>
+      </div>
+      <div>
+        <button type="button" class="btn" id="resetBtn">초기화</button>
+        <button type="button" class="btn" id="panelToggle" aria-expanded="false" aria-controls="panelBody">펼치기 ▾</button>
+      </div>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+  </aside>
+
+  <!-- 결과 -->
+  <section aria-label="시뮬레이션 결과">
+    <div class="tabs" role="tablist" aria-label="결과 탭">
+      <button class="tab" role="tab" id="t-summary" aria-controls="p-summary" aria-selected="true"><span class="n">1</span>요약</button>
+      <button class="tab" role="tab" id="t-gen" aria-controls="p-gen" aria-selected="false" tabindex="-1"><span class="n">2</span>발전·수익</button>
+      <button class="tab" role="tab" id="t-cash" aria-controls="p-cash" aria-selected="false" tabindex="-1"><span class="n">3</span>현금흐름</button>
+      <button class="tab" role="tab" id="t-env" aria-controls="p-env" aria-selected="false" tabindex="-1"><span class="n">4</span>환경효과</button>
+    </div>
+
+    <div id="p-summary" role="tabpanel" aria-labelledby="t-summary">
+      <div class="kpis" id="kpis"></div>
+      <div class="card">
+        <h3>자금 구성</h3>
+        <p class="desc">총사업비를 자기자본과 대출로 조달하는 구조입니다.</p>
+        <div class="fund" id="fund"></div>
+        <div class="fund-info" id="fundInfo"></div>
+      </div>
+      <div class="card">
+        <h3>한눈에 보는 진단</h3>
+        <ul class="notes" id="notes"></ul>
+      </div>
+    </div>
+
+    <div id="p-gen" role="tabpanel" aria-labelledby="t-gen" hidden>
+      <div class="card">
+        <h3>월별 발전량 (1년차)</h3>
+        <p class="desc">계절 보정계수를 반영한 월별 추정치입니다. 막대를 누르거나 올려보면 상세 값이 보입니다.</p>
+        <div class="legend"><span><i style="background:var(--navy2)"></i>월 발전량(kWh)</span><span><i style="background:var(--orange)"></i>최대 발전 월</span></div>
+        <div class="chart" id="ch-month"></div>
+        <div class="minmax" id="minmax"></div>
+      </div>
+      <div class="card">
+        <h3>연도별 매출 추이</h3>
+        <p class="desc">성능저하로 매년 발전량이 줄어드는 만큼 매출도 완만히 감소합니다.</p>
+        <div class="legend"><span><i class="ln" style="background:var(--orange)"></i>매출</span><span><i class="ln" style="background:var(--navy)"></i>매출 − 운영비</span></div>
+        <div class="chart" id="ch-rev"></div>
+      </div>
+    </div>
+
+    <div id="p-cash" role="tabpanel" aria-labelledby="t-cash" hidden>
+      <div class="card">
+        <h3>누적 현금흐름</h3>
+        <p class="desc">주황색 0선을 넘어서는 지점이 투자금 회수 시점입니다.</p>
+        <div class="legend"><span><i class="ln" style="background:var(--navy)"></i>자기자본 기준 누적(원리금 상환 후)</span><span><i class="ln" style="background:#9aa6c0"></i>총사업비 기준 누적(대출 제외)</span><span><i class="ln" style="background:var(--orange)"></i>0선 = 회수시점</span></div>
+        <div class="chart" id="ch-cum"></div>
+      </div>
+      <div class="card">
+        <h3>연도별 현금흐름표</h3>
+        <p class="unit">금액 단위: 만원 · 0년차는 자기자본 투입 · 순현금흐름 = 매출 − 운영비 − 원리금상환</p>
+        <div class="tbl-wrap"><table id="tbl"></table></div>
+      </div>
+    </div>
+
+    <div id="p-env" role="tabpanel" aria-labelledby="t-env" hidden>
+      <div class="card">
+        <h3 id="envT1">연간 환경효과 (1년차)</h3>
+        <p class="desc">태양광 발전이 화력발전을 대체해 줄이는 온실가스를 환산했습니다.</p>
+        <div class="env-grid" id="env1"></div>
+      </div>
+      <div class="card">
+        <h3 id="envT2">누적 환경효과</h3>
+        <p class="desc" id="envD2"></p>
+        <div class="env-grid" id="env2"></div>
+        <p class="assump">※ 전력 배출계수 0.4594 kgCO₂/kWh, 소나무 1그루 연 약 6.6 kgCO₂ 흡수, 승용차 1대 연 약 2.4 tCO₂ 배출을 가정한 근사치입니다.</p>
+      </div>
+      <div class="card">
+        <h3>누적 CO₂ 감축량</h3>
+        <div class="chart" id="ch-co2"></div>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+
+<!-- 이력관리 -->
+<section class="hist" id="viewHist" hidden aria-label="이력관리">
+  <!-- 로그인 -->
+  <div class="card login" id="adminLogin">
+    <h3>관리자 로그인</h3>
+    <p class="desc">이력에는 개인정보(이름·연락처·접속 IP)가 포함되어 있어 관리자만 볼 수 있습니다.</p>
+    <form id="loginForm" autocomplete="on">
+      <div class="inp txt"><input id="adminPw" type="password" autocomplete="current-password" placeholder="관리자 비밀번호" aria-label="관리자 비밀번호" required></div>
+      <p class="warnbox" id="loginErr" hidden></p>
+      <button type="submit" class="btn primary wide">로그인</button>
+    </form>
+  </div>
+
+  <!-- 이력 목록 -->
+  <div class="card" id="histMain" hidden>
+    <h3>보고서 생성 이력</h3>
+    <p class="desc">보고서를 생성할 때마다 사용자 이름·접속 IP·시뮬레이터 기초정보가 서버에 자동으로 기록됩니다.</p>
+    <div class="hist-bar">
+      <div class="inp"><input id="hq" type="search" placeholder="이름·소속·프로젝트·IP 검색" autocomplete="off" aria-label="이력 검색"></div>
+      <span class="hist-cnt" id="hcnt"></span>
+      <span class="grow"></span>
+      <button type="button" class="btn" id="csvBtn">CSV 내보내기</button>
+      <button type="button" class="btn danger" id="clearBtn">전체 삭제</button>
+      <button type="button" class="btn" id="logoutBtn">로그아웃</button>
+    </div>
+    <div class="tbl-wrap"><table id="htbl"></table></div>
+    <div class="more"><button type="button" class="btn" id="moreBtn" hidden>더 보기</button></div>
+    <p class="note">접속 IP는 서버가 요청 시점에 직접 확인한 값입니다. 목록의 번호는 현재 조회 결과 기준입니다.</p>
+  </div>
+</section>
+
+<!-- 보고서 -->
+<div class="ov" id="reportOv" hidden role="dialog" aria-modal="true" aria-label="사업성 분석 보고서">
+  <div class="report-actions">
+    <button type="button" class="btn primary" id="printBtn">인쇄 / PDF 저장</button>
+    <button type="button" class="btn" id="repHist">이력관리로</button>
+    <button type="button" class="btn" id="repClose">닫기</button>
+  </div>
+  <article class="report" id="reportBody"></article>
+</div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+
+<footer class="disclaimer">
+  <div>
+    <b>※ 간이 모델 안내</b> — 본 시뮬레이터는 의사결정을 돕기 위한 <b>간이 모델</b>입니다.
+    <ul>
+      <li>월별 발전량은 국내 일사 패턴을 단순화한 계절 보정계수(연 합계는 입력값과 동일)로 추정하며, 실제 일사량·음영·온도·가동률과 다를 수 있습니다.</li>
+      <li>SMP·REC 단가, 운영비는 매년 일정하다고 가정하고(물가·단가 변동 없음), 운영비는 총사업비 대비 비율로 계산합니다. 세금, 보험, 인버터 교체, 철거·원상복구, REC 가중치, 정부 보조금은 반영하지 않았습니다.</li>
+      <li>대출은 연 단위 원리금균등 상환이며, 대출 기간이 분석기간보다 길면 잔액을 마지막 해에 일시 상환한다고 봅니다. 모든 현금흐름은 연말 기준입니다.</li>
+      <li>보고서를 생성하면 입력하신 사용자 정보, 서버가 확인한 접속 IP, 시뮬레이터 입력 조건과 주요 결과가 서버에 저장되며 관리자만 열람할 수 있습니다.</li>
+      <li>실제 투자 판단 전에는 현장 조사와 전문가 검토, 금융기관 상담을 거치시기 바랍니다. 결과에 대한 책임은 사용자에게 있습니다.</li>
+    </ul>
+  </div>
+</footer>
+
+<script src="/model.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

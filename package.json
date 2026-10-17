@@ -1,0 +1,13 @@
+{
+  "name": "grandsun-solar-simulator",
+  "version": "1.0.0",
+  "description": "GRANDSUN 태양광 종합 사업성 시뮬레이터 (서버 버전)",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=22.13"
+  }
+}
