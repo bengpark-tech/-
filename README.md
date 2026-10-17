@@ -62,3 +62,30 @@ data/            실행 시 자동 생성되는 DB
 | `GET /api/history?q=&limit=&offset=` | 관리자 | 이력 조회·검색 |
 | `GET /api/history.csv` | 관리자 | 전체 이력 CSV |
 | `DELETE /api/history/:id` · `DELETE /api/history` | 관리자 | 개별·전체 삭제 |
+
+## Vercel 배포
+
+이 프로젝트는 Vercel에서 **정적 파일(`public/`) + Vercel Functions(`api/index.js`) + Neon Postgres**로 동작합니다.
+(서버리스는 파일 시스템이 유지되지 않아 SQLite 대신 Postgres를 씁니다. 관리자 세션은 서명된 쿠키, 요청 제한은 DB에 기록합니다.)
+
+```bash
+npm i -g vercel
+vercel link                         # 프로젝트 연결
+vercel integration add neon         # Neon Postgres 연결(DATABASE_URL 자동 설정, 약관 동의 필요)
+vercel env add ADMIN_PASSWORD production --sensitive   # 관리자 비밀번호
+vercel deploy --prod
+```
+
+- 필수 환경변수: `DATABASE_URL`(Neon 연결 시 자동), `ADMIN_PASSWORD`(없으면 관리자 로그인이 비활성화됩니다)
+- 선택: `RETENTION_DAYS`(보관 일수 지난 이력을 자동 삭제)
+- 비밀번호를 바꾸면 기존 로그인 세션이 모두 무효가 됩니다.
+- 로컬에서 같은 DB로 테스트: `vercel env pull` 후 `STORE=postgres node --env-file=.env.local server.js`
+
+## 구조(갱신)
+
+```
+lib/handler.js       API 로직(로컬·Vercel 공용)
+lib/store-sqlite.js  로컬용 저장소      lib/store-pg.js  Vercel용 저장소(Neon)
+api/index.js         Vercel Functions 진입점(vercel.json rewrite로 /api/* 연결)
+vercel.json          정적 출력 폴더, rewrite, 보안 헤더
+```
